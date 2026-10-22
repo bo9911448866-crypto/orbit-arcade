@@ -2,6 +2,7 @@ import React,{Suspense,lazy,useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {ArrowUpRight,ArrowRight,Search,Gamepad2,Globe2,Heart,Clock3,Shuffle,Maximize2,X,RotateCw,ChevronRight,Orbit,VolumeX,Volume2,Menu,Settings2} from 'lucide-react';
 import './style.css';
+import EntryGate from './EntryGate';
 import {initializeProxy,resolveProxyAddress} from './proxy';
 const Scene=lazy(()=>import('./Scene'));
 type Game={id:string;name:string;path:string;categories:string[];aliases:string[];cover?:string};
@@ -42,4 +43,4 @@ function GameCover({game}:{game:Game}){
  if(game.cover&&!failed)return <img className="game-cover" src={game.cover} alt={game.name+' game artwork'} loading="lazy" decoding="async" onError={()=>setFailed(true)}/>;
  return <div className="cover-placeholder"><Gamepad2 size={28}/><span>{game.name}</span><small>Artwork unavailable</small></div>;
 }
-createRoot(document.getElementById('root')!).render(<App/>);
+createRoot(document.getElementById('root')!).render(<EntryGate><App/></EntryGate>);

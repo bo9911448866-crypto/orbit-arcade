@@ -12,6 +12,10 @@ A React 19 + TSX frontend, real Three.js orbital sculpture and loading scenes, a
 - Ultraviolet **3.2.10**, BareMux **2.1.9**, compatible Epoxy transport **2.1.27**, and Wisp JS **0.5.0**. This is an actual service-worker proxy with a Node WebSocket backend.
 - A Render Blueprint, locked npm dependencies, TypeScript checks, production build, and catalog/path tests.
 
+## Entrance screen
+
+Each fresh load of the arcade starts with a visual “404 Not Found” page. Press **O** (lowercase or uppercase) to reveal ORBIT. Refreshing the page resets this screen. It is a visual entrance, not authentication. Proxy recovery pages and game asset routes remain available.
+
 ## Run locally
 
 Install Node.js 22 or newer, then:
