@@ -1,0 +1,4 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {games,assetPath,commit} from '../server/catalog';
+test('upstream catalog entries retain valid paths and unique titles',()=>{assert.ok(games.length>150);assert.equal(new Set(games.map(g=>g.name)).size,games.length);assert.match(commit,/^[a-f0-9]{40}$/);for(const g of games){assert.ok(g.path);assert.ok(assetPath('/games/'+g.path.split('?')[0]));}});
+test('asset paths preserve files and reject traversal',()=>{assert.equal(assetPath('/games/2048/'), 'games/2048/index.html');assert.equal(assetPath('/games/flash'), 'games/flash/index.html');assert.equal(assetPath('/games/a/game.wasm'),'games/a/game.wasm');for(const p of ['/games/%2e%2e/secret','/etc/passwd','/games/%00','/games/%ZZ','/games/a\\b'])assert.equal(assetPath(p),null);});
