@@ -6,6 +6,8 @@ A React 19 + TSX frontend, real Three.js orbital sculpture and loading scenes, a
 
 - All **175 entries in the supplied MonkeyGG2 catalog**, including Flash game query parameters, plus Smart Ball and Where Is the Water: **177 playable catalog entries** across all game folders in the supplied repository.
 - Search (including aliases), category filters, favorites, recently played, random selection, a full-window player, reload, fullscreen, and a separate-tab fallback.
+- Real game thumbnails and splash artwork bundled locally where available, with a plain title card when no suitable artwork is available. Cover provenance is recorded in `data/cover-sources.json`.
+- DuckDuckGo search in the proxy address box: enter search words or an HTTP/HTTPS website URL.
 - Real WebGL 3D assets generated in Three.js, pointer interaction, reduced-motion support and a fallback when WebGL is unavailable.
 - Ultraviolet **3.2.10**, BareMux **2.1.9**, compatible Epoxy transport **2.1.27**, and Wisp JS **0.5.0**. This is an actual service-worker proxy with a Node WebSocket backend.
 - A Render Blueprint, locked npm dependencies, TypeScript checks, production build, and catalog/path tests.
@@ -62,7 +64,7 @@ To intentionally refresh the catalog to upstream's latest main revision, run `np
 
 ## Proxy details
 
-`/sw.js` controls `/uv/service/`; `/uv/`, `/baremux/`, and `/epoxy/` serve their package assets. `/wisp/` routes WebSocket upgrades to Wisp JS. The server supplies the cross-origin isolation headers needed by the transport and the service-worker scope header.
+`/sw.js` is registered at root scope and intercepts only `/uv/service/` requests; `/uv/`, `/baremux/`, and `/epoxy/` serve their package assets. `/wisp/` routes WebSocket upgrades to Wisp JS. The server supplies the cross-origin isolation headers needed by the transport and the service-worker scope header. The proxy iframe shares the service-worker context; missed proxy navigations receive a connection recovery page instead of the arcade homepage or a static 404. Existing installations migrate the old narrow service-worker registration automatically. After upgrading, close old proxy tabs and refresh ORBIT before launching a site again.
 
 Wisp blocks private and loopback IPs, disables UDP, permits destination ports 80/443, limits streams per connection, and checks the WebSocket origin. The proxy rewrites website traffic; it is not a VPN or anonymity guarantee. Some websites block proxies or depend on unsupported APIs. Games run as original third-party content on your deployment's origin.
 
@@ -73,7 +75,7 @@ npm test
 npm run build
 ```
 
-The automated suite checks catalog integrity and path normalization/traversal rejection. The production TSX and Node builds were checked. Browser interaction and end-to-end proxy traffic could not be verified in the creation environment; validate a representative game and the Web proxy tab after deployment. The game mute button affects supported HTML audio/video elements; WebAudio games and cross-origin embedded players may manage their own sound.
+The automated suite checks catalog integrity and path normalization/traversal rejection. The production TSX and Node builds were checked. The proxy URL resolver is tested for DuckDuckGo searches, deep game paths, query strings, and invalid schemes. Production recovery routes and static proxy assets are checked over HTTP. End-to-end proxy traffic requires HTTPS and must be checked on the deployed Render origin; the local preview is HTTP. The game mute button affects supported HTML audio/video elements; WebAudio games and cross-origin embedded players may manage their own sound.
 
 ## Attribution and licenses
 

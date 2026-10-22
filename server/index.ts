@@ -14,12 +14,22 @@ wisp.options.allow_loopback_ips=false;
 wisp.options.allow_udp_streams=false;
 wisp.options.port_whitelist=[80,443];
 wisp.options.stream_limit_total=128;
+const development=process.env.NODE_ENV!=='production' && Boolean(process.argv[1]?.endsWith('.ts'));
 const app=express();
 app.disable('x-powered-by');
 app.use((_req,res,next)=>{res.setHeader('Cross-Origin-Opener-Policy','same-origin');res.setHeader('Cross-Origin-Embedder-Policy','require-corp');res.setHeader('X-Content-Type-Options','nosniff');next();});
 app.get('/health',(_req,res)=>res.json({status:'ok',games:games.length,commit}));
 app.get('/api/games',(_req,res)=>res.json({games,commit,source:'https://gitlab.com/barryjensen-dev/monkeygg2'}));
 app.get('/sw.js',(_req,res)=>{res.setHeader('Service-Worker-Allowed','/');res.setHeader('Cache-Control','no-cache');res.sendFile(resolve('public/sw.js'));});
+// Proxy navigations must never be served the arcade SPA or a static 404.
+app.use('/uv/service',(req,res)=>{
+ res.setHeader('Cache-Control','no-store');
+ const navigation=['document','iframe'].includes(String(req.headers['sec-fetch-dest']))||String(req.headers.accept).includes('text/html');
+ if((req.method==='GET'||req.method==='HEAD')&&navigation){
+  res.sendFile(resolve(development?'proxy-recovery.html':'dist/client/proxy-recovery.html'));return;
+ }
+ res.status(503).type('text/plain').send('The proxy service worker did not intercept this request. Reopen the Web proxy tab to reconnect.');
+});
 app.use(express.static(resolve('public')));
 app.use('/uv',express.static(uvPath));app.use('/epoxy',express.static(epoxyPath));app.use('/baremux',express.static(baremuxPath));
 // Serve original repository bytes without rewriting scripts, WASM, media, or Flash.
@@ -39,7 +49,7 @@ app.use(['/games','/imgs','/fonts','/js','/css'],async(req,res)=>{
  if(upstream.body){const stream=Readable.fromWeb(upstream.body as any);stream.on('error',()=>res.destroy());res.on('close',()=>{controller.abort();clearTimeout(timer);});stream.pipe(res);}else res.end();
  }catch{if(!res.headersSent)res.status(502).send('The game source could not be reached. Retry shortly.');else res.destroy();}
 });
-if(process.env.NODE_ENV!=='production' && process.argv[1]?.endsWith('.ts')){
+if(development){
  const {createServer:createVite}=await import('vite');const vite=await createVite({server:{middlewareMode:true},appType:'spa'});app.use(vite.middlewares);
 }else{
  app.use(express.static(resolve('dist/client')));app.get('*',(req,res)=>{if(req.path.startsWith('/uv/')||/\.[\w]+$/.test(req.path))res.sendStatus(404);else res.sendFile(resolve('dist/client/index.html'));});
@@ -51,5 +61,5 @@ server.on('upgrade',(req,socket,head)=>{
  try{if(!req.headers.origin || new URL(req.headers.origin).host!==req.headers.host){socket.destroy();return;}}catch{socket.destroy();return;}
  if(req.url?.split('?')[0]==='/wisp/')wisp.routeRequest(req,socket,head);else socket.destroy();
 });
-server.listen(port,'0.0.0.0',()=>console.log('ORBIT ready on port '+port));
+server.listen(port,'0.0.0.0',()=>{const address=server.address();console.log('ORBIT ready on port '+(address&&typeof address==='object'?address.port:port));});
 process.on('SIGTERM',()=>{server.close();setTimeout(()=>process.exit(0),5000).unref();});
