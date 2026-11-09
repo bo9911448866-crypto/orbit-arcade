@@ -84,3 +84,12 @@ The automated suite checks catalog integrity and path normalization/traversal re
 ## Attribution and licenses
 
 The game catalog and game files originate from the supplied MonkeyGG2 repository. Its repository license is retained at `data/UPSTREAM-LICENSE`; individual games and assets may carry their own licenses. Dependency licenses remain applicable, including Epoxy's AGPL-3.0-only license, Wisp JS's LGPL-3.0-or-later license, and Ultraviolet's MIT license. This project includes source for its custom application and does not override third-party rights. Keep original notices with redistributed games and dependencies.
+
+### Framer frontend
+
+The Framer project uses `framer/OrbitArcade.tsx` as its homepage code component.
+Run `node framer/generate.mjs` after changing the shared arcade UI or stylesheet,
+then replace the component in Framer and publish there. The component's **Render URL**
+property defaults to the production Node service. The public catalog, cover images,
+game files, and Three.js scene load from that service. The proxy opens in a separate
+Render tab to keep its service worker and WebSocket on the same origin.

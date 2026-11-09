@@ -15,7 +15,15 @@ test('production serves covers and recovers deep proxy navigations without servi
  });
  const root='http://127.0.0.1:'+port;
  const health=await (await fetch(root+'/health')).json();assert.equal(health.status,'ok');assert.equal(health.games,177);
- const {games}=await (await fetch(root+'/api/games')).json();
+ const origin='https://orbit-arcade.framer.website';
+ const catalog=await fetch(root+'/api/games',{headers:{Origin:origin}});
+ assert.equal(catalog.headers.get('access-control-allow-origin'),'*');
+ const {games}=await catalog.json();assert.equal(games.length,177);
+ const scene=await fetch(root+'/arcade-assets/orbit-scene.mjs',{headers:{Origin:origin}});
+ assert.equal(scene.status,200);
+ assert.equal(scene.headers.get('access-control-allow-origin'),'*');
+ assert.match(scene.headers.get('content-type'),/javascript/);
+ assert.match(await scene.text(),/mountOrbitScene/);
  const covers=[...new Set(games.map(g=>g.cover).filter(Boolean))];assert.ok(covers.length>=120);
  for(const cover of covers){const response=await fetch(root+cover);assert.equal(response.status,200,cover);assert.match(response.headers.get('content-type'),/image\/webp/);assert.ok((await response.arrayBuffer()).byteLength>0);}
  for(const path of ['/uv/service/encoded-target','/uv/service/encoded-target/en/g/drive-mad','/uv/service/encoded-target/game.html?q=1']){

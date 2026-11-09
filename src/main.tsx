@@ -10,7 +10,7 @@ declare global{interface Window{BareMux:any;__uv$config:any;}}
 const read=(key:string)=>{try{return JSON.parse(localStorage.getItem(key)||'[]') as string[];}catch{return [];}};
 function App(){
  const [games,setGames]=useState<Game[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState('');
- const [tab,setTab]=useState('Discover'),[search,setSearch]=useState(''),[category,setCategory]=useState('All games'),[favorites,setFavorites]=useState(()=>read('orbit-favorites')),[recent,setRecent]=useState(()=>read('orbit-recent'));
+ const [tab,setTab]=useState(()=>new URLSearchParams(location.search).get('view')==='proxy'?'Web proxy':'Discover'),[search,setSearch]=useState(''),[category,setCategory]=useState('All games'),[favorites,setFavorites]=useState(()=>read('orbit-favorites')),[recent,setRecent]=useState(()=>read('orbit-recent'));
  const [active,setActive]=useState<{name:string;url:string}|null>(null),[frameLoading,setFrameLoading]=useState(false),[frameKey,setFrameKey]=useState(0),[address,setAddress]=useState(''),[proxyBusy,setProxyBusy]=useState(false),[proxyError,setProxyError]=useState(''),[muted,setMuted]=useState(false),[settings,setSettings]=useState(false),[menu,setMenu]=useState(false);
  const player=useRef<HTMLDivElement>(null),searchRef=useRef<HTMLInputElement>(null);
  async function load(){setLoading(true);setError('');try{const r=await fetch('/api/games');if(!r.ok)throw Error();setGames((await r.json()).games);}catch{setError('The library could not be loaded. Check your connection and try again.');}finally{setLoading(false);}}

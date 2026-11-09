@@ -19,7 +19,9 @@ const app=express();
 app.disable('x-powered-by');
 app.use((_req,res,next)=>{res.setHeader('Cross-Origin-Opener-Policy','same-origin');res.setHeader('Cross-Origin-Embedder-Policy','require-corp');res.setHeader('X-Content-Type-Options','nosniff');next();});
 app.get('/health',(_req,res)=>res.json({status:'ok',games:games.length,commit}));
-app.get('/api/games',(_req,res)=>res.json({games,commit,source:'https://gitlab.com/barryjensen-dev/monkeygg2'}));
+// The public, read-only catalog is also consumed by the Framer frontend.
+app.get('/api/games',(_req,res)=>res.set('Access-Control-Allow-Origin','*').json({games,commit,source:'https://gitlab.com/barryjensen-dev/monkeygg2'}));
+app.use('/covers',(_req,res,next)=>{res.set('Cross-Origin-Resource-Policy','cross-origin');next();});
 app.get('/sw.js',(_req,res)=>{res.setHeader('Service-Worker-Allowed','/');res.setHeader('Cache-Control','no-cache');res.sendFile(resolve('public/sw.js'));});
 // Proxy navigations must never be served the arcade SPA or a static 404.
 app.use('/uv/service',(req,res)=>{
@@ -48,6 +50,11 @@ app.use(['/games','/imgs','/fonts','/js','/css'],async(req,res)=>{
  for(const key of ['content-length','content-range','accept-ranges']){const v=upstream.headers.get(key);if(v)res.setHeader(key,v);}
  if(upstream.body){const stream=Readable.fromWeb(upstream.body as any);stream.on('error',()=>res.destroy());res.on('close',()=>{controller.abort();clearTimeout(timer);});stream.pipe(res);}else res.end();
  }catch{if(!res.headersSent)res.status(502).send('The game source could not be reached. Retry shortly.');else res.destroy();}
+});
+app.get('/arcade-assets/orbit-scene.mjs',(_req,res)=>{
+ res.set('Access-Control-Allow-Origin','*');
+ res.set('Cross-Origin-Resource-Policy','cross-origin');
+ res.sendFile(resolve('dist/client/arcade-assets/orbit-scene.mjs'));
 });
 if(development){
  const {createServer:createVite}=await import('vite');const vite=await createVite({server:{middlewareMode:true},appType:'spa'});app.use(vite.middlewares);
