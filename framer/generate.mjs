@@ -32,8 +32,8 @@ app=app.replace(/^declare global.*\n/m,'').replace('function App(){','function A
  .replace('title={active.name} src=', 'title={active.name} referrerPolicy="strict-origin-when-cross-origin" src=');
 const css=readFileSync('src/style.css','utf8');
 const line=css.indexOf('\n');
-const scopedCss=css.slice(0,line)+'\n.orbit-shell{min-height:100dvh;font-family:DM Sans,system-ui,sans-serif;color:#eee;background:#111315;font-synthesis:none;--lime:#c9f887;--muted:#878d89;--border:#2a2e2b}\n@scope (.orbit-shell){\n'+css.slice(line+1).replace(/^:root\{[^}]+\}/,'').replace('body{margin:0}','')+'\n.proxy-launch{margin:20px 0}.scene[data-fallback=true] .scene-fallback{line-height:1}.scene.small[data-fallback=true] .scene-fallback{font-size:40px}.entry-touch{display:none}@media(pointer:coarse){.entry-touch{display:inline-block;font:16px system-ui;padding:10px 15px;border:1px solid #888;border-radius:5px}}\n}';
-const prelude=`import React,{createContext,Suspense,useContext,useEffect,useRef,useState} from 'react';
+const scopedCss=css.slice(0,line)+'\n.orbit-shell{min-height:100dvh;font-family:DM Sans,system-ui,sans-serif;color:#eee;background:#111315;font-synthesis:none;--lime:#c9f887;--muted:#878d89;--border:#2a2e2b}\n@scope (.orbit-shell){\n'+css.slice(line+1).replace(/^:root\{[^}]+\}/,'').replace('body{margin:0}','')+'\n.proxy-launch{margin:20px 0}.scene[data-fallback=true] .scene-fallback{line-height:1}.scene-fallback svg{width:min(76%,330px);height:auto;fill:none;stroke:#bce579;stroke-width:1;filter:drop-shadow(0 0 14px #a0ce514d)}.scene.small .scene-fallback svg{width:72px}.entry-touch{display:none}@media(pointer:coarse){.entry-touch{display:inline-block;font:16px system-ui;padding:10px 15px;border:1px solid #888;border-radius:5px}}\n}';
+const prelude=`import React,{createContext,Suspense,useContext,useEffect,useId,useRef,useState} from 'react';
 import {addPropertyControls,ControlType,RenderTarget} from 'framer';
 type IconProps={size?:number;fill?:string};
 function icon(shape:React.ReactNode){return function Icon({size=24,fill='none'}:IconProps){return <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{shape}</svg>;};}
@@ -41,7 +41,7 @@ const SceneContext=createContext('https://orbit-arcade.onrender.com');
 type SceneModule={mountOrbitScene:(el:HTMLDivElement)=>(()=>void)|undefined};
 const scenes=new Map<string,Promise<SceneModule>>();
 function Scene({small=false}:{small?:boolean}){
- const backend=useContext(SceneContext),host=useRef<HTMLDivElement>(null);
+ const backend=useContext(SceneContext),host=useRef<HTMLDivElement>(null),gradientId=useId();
  useEffect(()=>{
   let disposed=false,cleanup:(()=>void)|undefined;
   const url=backend+'/arcade-assets/orbit-scene.mjs';
@@ -50,7 +50,7 @@ function Scene({small=false}:{small?:boolean}){
   void scene.then(module=>{if(!disposed&&host.current)cleanup=module.mountOrbitScene(host.current);}).catch(()=>{});
   return()=>{disposed=true;cleanup?.();};
  },[backend]);
- return <div className={'scene '+(small?'small':'')} ref={host} data-fallback="true" aria-hidden="true"><div className="scene-fallback">◈</div></div>;
+ return <div className={'scene '+(small?'small':'')} ref={host} data-fallback="true" aria-hidden="true"><div className="scene-fallback"><svg viewBox="0 0 240 190" aria-hidden="true"><defs><linearGradient id={gradientId} x2="0.8" y2="1"><stop stopColor="#e0fbae"/><stop offset="1" stopColor="#5b883b"/></linearGradient></defs><ellipse cx="120" cy="95" rx="99" ry="28" transform="rotate(-27 120 95)"/><ellipse cx="120" cy="95" rx="100" ry="35" transform="rotate(29 120 95)"/><ellipse cx="120" cy="95" rx="73" ry="67" strokeDasharray="2 7"/><path fill={'url(#'+gradientId+')'} d="m120 35 44 27 13 47-30 39-51 4-34-35 5-49Z"/><path d="m120 35 19 49 38 25m-38-25-43 68m43-68L67 68m-5 49 77-33 8 64"/><circle cx="34" cy="135" r="4" fill="#c9f887"/><circle cx="201" cy="131" r="3" fill="#c9f887"/><circle cx="175" cy="55" r="3" fill="#c9f887"/></svg></div></div>;
 }
 interface OrbitProps { backend?:string; style?:React.CSSProperties }
 /**
@@ -67,7 +67,7 @@ export default function OrbitArcade({backend='https://orbit-arcade.onrender.com'
   return()=>window.removeEventListener('keydown',unlock);
  },[open,canvas]);
  const root=backend.trim().replace(/\\/+$/,'')||'https://orbit-arcade.onrender.com';
- return <div className="orbit-shell" style={style}><style>{ORBIT_CSS}</style>{open||canvas?<Arcade backend={root}/>:<div className="entry-error"><h1>404 Not Found</h1><hr/><p>nginx</p><button className="entry-touch" aria-label="Open ORBIT Arcade" onClick={()=>setOpen(true)}>O</button></div>}</div>;
+ return <div className="orbit-shell" style={style}><style dangerouslySetInnerHTML={{__html:ORBIT_CSS}}/>{open||canvas?<Arcade backend={root}/>:<div className="entry-error"><h1>404 Not Found</h1><hr/><p>nginx</p><button className="entry-touch" aria-label="Open ORBIT Arcade" onClick={()=>setOpen(true)}>O</button></div>}</div>;
 }
 addPropertyControls(OrbitArcade,{backend:{type:ControlType.String,title:'Render URL',defaultValue:'https://orbit-arcade.onrender.com'}});
 `;
